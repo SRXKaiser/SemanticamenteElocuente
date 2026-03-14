@@ -1,0 +1,16 @@
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\bin\Debug\net10.0-windows\SemanticamenteElocuente.exe
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\bin\Debug\net10.0-windows\SemanticamenteElocuente.deps.json
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\bin\Debug\net10.0-windows\SemanticamenteElocuente.runtimeconfig.json
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\bin\Debug\net10.0-windows\SemanticamenteElocuente.dll
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\bin\Debug\net10.0-windows\SemanticamenteElocuente.pdb
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.Form1.resources
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.csproj.GenerateResource.cache
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.AssemblyInfoInputs.cache
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.AssemblyInfo.cs
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.csproj.CoreCompileInputs.cache
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.dll
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\refint\SemanticamenteElocuente.dll
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.pdb
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.genruntimeconfig.cache
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\ref\SemanticamenteElocuente.dll
