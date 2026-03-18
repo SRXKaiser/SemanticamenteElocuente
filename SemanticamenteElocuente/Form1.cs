@@ -34,7 +34,6 @@ namespace SemanticamenteElocuente
             rtbSalida.BackColor = Color.FromArgb(250, 250, 250);
             rtbSalida.BorderStyle = BorderStyle.FixedSingle;
             rtbSalida.Font = new Font("Consolas", 10f, FontStyle.Regular);
-
         }
 
         private void btnAnalizar_Click(object sender, EventArgs e)
@@ -111,18 +110,50 @@ namespace SemanticamenteElocuente
                 rtbSalida.AppendText("\n=== ANÁLISIS SEMÁNTICO ===\n");
 
                 var semantic = new SemanticAnalyzer();
-                var semanticErrors = semantic.Analyze(program);
+                var semanticDiagnostics = semantic.Analyze(program);
+
+                var semanticErrors = semanticDiagnostics
+                    .Where(d => d.Severity == SemanticSeverity.Error)
+                    .ToList();
+
+                var semanticWarnings = semanticDiagnostics
+                    .Where(d => d.Severity == SemanticSeverity.Warning)
+                    .ToList();
+
+                if (semanticErrors.Count == 0 && semanticWarnings.Count == 0)
+                {
+                    rtbSalida.SelectionColor = Color.DarkGreen;
+                    rtbSalida.AppendText("Análisis semántico correcto.\n");
+                }
+                else
+                {
+                    if (semanticErrors.Count > 0)
+                    {
+                        rtbSalida.SelectionColor = Color.DarkRed;
+                        rtbSalida.AppendText("Errores semánticos:\n\n");
+
+                        foreach (var err in semanticErrors)
+                            rtbSalida.AppendText(err + "\n");
+
+                        rtbSalida.AppendText("\n");
+                    }
+
+                    if (semanticWarnings.Count > 0)
+                    {
+                        rtbSalida.SelectionColor = Color.DarkOrange;
+                        rtbSalida.AppendText("Warnings:\n\n");
+
+                        foreach (var warn in semanticWarnings)
+                            rtbSalida.AppendText(warn + "\n");
+
+                        rtbSalida.AppendText("\n");
+                    }
+
+                    rtbSalida.SelectionColor = Color.Black;
+                }
 
                 if (semanticErrors.Count > 0)
                 {
-                    rtbSalida.SelectionColor = Color.DarkRed;
-                    rtbSalida.AppendText("Se encontraron errores semánticos:\n\n");
-
-                    foreach (var err in semanticErrors)
-                        rtbSalida.AppendText(err + "\n");
-
-                    rtbSalida.SelectionColor = Color.Black;
-
                     var erroresSemanticos = semanticErrors
                         .Select(e => (e.Line, e.Column, e.Message))
                         .ToList();
@@ -131,13 +162,11 @@ namespace SemanticamenteElocuente
                     return;
                 }
 
-                rtbSalida.SelectionColor = Color.DarkGreen;
-                rtbSalida.AppendText("Análisis semántico correcto.\n");
-
                 // =========================================
                 // 4. EJECUCIÓN
                 // =========================================
-                rtbSalida.AppendText("\n=== EJECUCIÓN ===\n");
+                rtbSalida.SelectionColor = Color.Black;
+                rtbSalida.AppendText("=== EJECUCIÓN ===\n");
 
                 var evaluator = new Evaluator();
                 var output = evaluator.Run(program);
@@ -150,6 +179,7 @@ namespace SemanticamenteElocuente
                 else
                 {
                     rtbSalida.SelectionColor = Color.DarkBlue;
+
                     foreach (var line in output)
                         rtbSalida.AppendText(line + "\n");
                 }
@@ -317,7 +347,7 @@ namespace SemanticamenteElocuente
                 _rutaArchivo = openFileDialog1.FileName;
                 _codigoFuente = File.ReadAllText(openFileDialog1.FileName, Encoding.UTF8);
 
-                rtbCodigo.Text = _codigoFuente;  
+                rtbCodigo.Text = _codigoFuente;
                 rtbSalida.Clear();
                 rtbSalida.AppendText("Archivo cargado. Presiona \"Analizar\".\n");
             }

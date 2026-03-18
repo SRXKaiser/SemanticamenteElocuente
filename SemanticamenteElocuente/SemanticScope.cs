@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
-
+using System.Collections.Generic;
 
 namespace SemanticamenteElocuente
 {
@@ -15,7 +14,6 @@ namespace SemanticamenteElocuente
         {
             Parent = parent;
         }
-
 
         public bool Declare(SymbolInfo symbol)
         {
@@ -39,9 +37,15 @@ namespace SemanticamenteElocuente
 
             return Parent?.Lookup(name);
         }
+
         public IEnumerable<string> GetDeclaredNames()
         {
             return _symbols.Keys;
+        }
+
+        public IEnumerable<SymbolInfo> GetDeclaredSymbols()
+        {
+            return _symbols.Values;
         }
     }
 }

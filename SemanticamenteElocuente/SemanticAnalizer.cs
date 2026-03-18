@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-
 namespace SemanticamenteElocuente
 {
     public sealed class SemanticAnalyzer
     {
-        private readonly List<SemanticError> _errors = new();
+        private readonly List<SemanticError> _diagnostics = new();
+        private readonly List<SymbolInfo> _allDeclaredSymbols = new();
+
         private SemanticScope _currentScope = new SemanticScope();
 
         private int _loopDepth = 0;
@@ -37,7 +38,9 @@ namespace SemanticamenteElocuente
 
         public IReadOnlyList<SemanticError> Analyze(ProgramNode program)
         {
-            _errors.Clear();
+            _diagnostics.Clear();
+            _allDeclaredSymbols.Clear();
+
             _currentScope = new SemanticScope();
             _loopDepth = 0;
             _switchDepth = 0;
@@ -48,16 +51,18 @@ namespace SemanticamenteElocuente
             foreach (var stmt in program.Statements)
                 VisitStatement(stmt);
 
-            return _errors;
+            EmitUnusedSymbolWarnings();
+
+            return _diagnostics;
         }
 
         private void RegisterBuiltins()
         {
-            _currentScope.Declare(new SymbolInfo("print", SymbolKind.Function, SemanticType.Void, 1));
-            _currentScope.Declare(new SymbolInfo("sqrt", SymbolKind.Function, SemanticType.Number, 1));
-            _currentScope.Declare(new SymbolInfo("pow", SymbolKind.Function, SemanticType.Number, 2));
-            _currentScope.Declare(new SymbolInfo("abs", SymbolKind.Function, SemanticType.Number, 1));
-            _currentScope.Declare(new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1));
+            DeclareSymbol(new SymbolInfo("print", SymbolKind.Function, SemanticType.Void, 1, true));
+            DeclareSymbol(new SymbolInfo("sqrt", SymbolKind.Function, SemanticType.Number, 1, true));
+            DeclareSymbol(new SymbolInfo("pow", SymbolKind.Function, SemanticType.Number, 2, true));
+            DeclareSymbol(new SymbolInfo("abs", SymbolKind.Function, SemanticType.Number, 1, true));
+            DeclareSymbol(new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1, true));
         }
 
         private void PushScope()
@@ -73,7 +78,45 @@ namespace SemanticamenteElocuente
 
         private void Error(Node node, string message)
         {
-            _errors.Add(new SemanticError(node.Line, node.Column, message));
+            _diagnostics.Add(new SemanticError(node.Line, node.Column, message, SemanticSeverity.Error));
+        }
+
+        private void Warning(int line, int column, string message)
+        {
+            _diagnostics.Add(new SemanticError(line, column, message, SemanticSeverity.Warning));
+        }
+
+        private bool DeclareSymbol(SymbolInfo symbol)
+        {
+            bool ok = _currentScope.Declare(symbol);
+            if (ok)
+                _allDeclaredSymbols.Add(symbol);
+            return ok;
+        }
+
+        private void EmitUnusedSymbolWarnings()
+        {
+            foreach (var symbol in _allDeclaredSymbols)
+            {
+                if (symbol.Kind == SymbolKind.Function)
+                    continue;
+
+                if (!symbol.WasUsed &&
+                    symbol.DeclLine > 0 &&
+                    symbol.DeclColumn > 0)
+                {
+                    string kindText = symbol.Kind switch
+                    {
+                        SymbolKind.Variable => "La variable",
+                        SymbolKind.Constant => "La constante",
+                        SymbolKind.Parameter => "El parámetro",
+                        _ => "El símbolo"
+                    };
+
+                    Warning(symbol.DeclLine, symbol.DeclColumn,
+                        $"{kindText} '{symbol.Name}' fue declarado pero nunca se utilizó.");
+                }
+            }
         }
 
         private void VisitStatement(Stmt stmt)
@@ -153,11 +196,24 @@ namespace SemanticamenteElocuente
                 : SymbolKind.Variable;
 
             SemanticType initType = SemanticType.Unknown;
+            bool initialized = false;
 
             if (varDecl.Init != null)
+            {
                 initType = GetExprType(varDecl.Init);
+                initialized = true;
+            }
 
-            if (!_currentScope.Declare(new SymbolInfo(varDecl.Name, kind, initType)))
+            var symbol = new SymbolInfo(
+                varDecl.Name,
+                kind,
+                initType,
+                0,
+                initialized,
+                varDecl.Line,
+                varDecl.Column);
+
+            if (!DeclareSymbol(symbol))
             {
                 Error(varDecl, $"'{varDecl.Name}' ya está declarado en este ámbito.");
             }
@@ -182,7 +238,7 @@ namespace SemanticamenteElocuente
 
             if (!symbol.IsAssignable)
             {
-                Error(assign, $"No se puede modificar '{assign.Name}'.");
+                Error(assign, $"No se puede modificar '{assign.Name}' porque es una constante.");
                 GetExprType(assign.Expr);
                 return;
             }
@@ -196,8 +252,11 @@ namespace SemanticamenteElocuente
             else if (exprType != SemanticType.Unknown && symbol.Type != exprType)
             {
                 Error(assign,
-                    $"No se puede asignar un valor de tipo {TypeName(exprType)} a '{assign.Name}' porque es de tipo {TypeName(symbol.Type)}.");
+                    $"No se puede asignar un valor de tipo {TypeName(exprType)} a '{assign.Name}' porque ya fue inferida como {TypeName(symbol.Type)}.");
             }
+
+            symbol.IsInitialized = true;
+            symbol.WasAssigned = true;
         }
 
         private void VisitIf(IfStmt ifStmt)
@@ -291,7 +350,16 @@ namespace SemanticamenteElocuente
 
         private void VisitFunctionDecl(FunctionDecl fn)
         {
-            if (!_currentScope.Declare(new SymbolInfo(fn.Name, SymbolKind.Function, SemanticType.Unknown, fn.Parameters.Count)))
+            var fnSymbol = new SymbolInfo(
+                fn.Name,
+                SymbolKind.Function,
+                SemanticType.Unknown,
+                fn.Parameters.Count,
+                true,
+                fn.Line,
+                fn.Column);
+
+            if (!DeclareSymbol(fnSymbol))
             {
                 Error(fn, $"La función '{fn.Name}' ya está declarada en este ámbito.");
                 return;
@@ -310,7 +378,18 @@ namespace SemanticamenteElocuente
                 Error(fn, $"El parámetro '{dup}' está duplicado en la función '{fn.Name}'.");
 
             foreach (var p in fn.Parameters.Distinct())
-                _currentScope.Declare(new SymbolInfo(p, SymbolKind.Parameter, SemanticType.Unknown));
+            {
+                var paramSymbol = new SymbolInfo(
+                    p,
+                    SymbolKind.Parameter,
+                    SemanticType.Unknown,
+                    0,
+                    true,
+                    fn.Line,
+                    fn.Column);
+
+                DeclareSymbol(paramSymbol);
+            }
 
             VisitStatement(fn.Body);
 
@@ -354,6 +433,14 @@ namespace SemanticamenteElocuente
                                 Error(id, $"Identificador '{id.Name}' no existe.");
 
                             return SemanticType.Unknown;
+                        }
+
+                        symbol.WasUsed = true;
+
+                        if (symbol.Kind != SymbolKind.Function && !symbol.IsInitialized)
+                        {
+                            Error(id, $"El identificador '{id.Name}' se está usando antes de haber sido inicializado.");
+                            return symbol.Type;
                         }
 
                         return symbol.Type;
