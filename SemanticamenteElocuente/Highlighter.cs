@@ -1,26 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace SemanticamenteElocuente
 {
     public static class Highlighter
     {
+        public static void Colorize(RichTextBox rtb, IEnumerable<Token> tokens)
+        {
+            Colorize(rtb, tokens, (IEnumerable<(int line, int col, string msg, bool isWarning)>?)null);
+        }
+
         public static void Colorize(
             RichTextBox rtb,
             IEnumerable<Token> tokens,
-            IEnumerable<(int line, int col, string msg)>? errors = null)
+            IEnumerable<(int line, int col, string msg)>? diagnostics)
         {
-            if (rtb is null) return;
+            var mapped = diagnostics?.Select(d => (d.line, d.col, d.msg, false));
+            Colorize(rtb, tokens, mapped);
+        }
 
-            int caretStart = rtb.SelectionStart;
-            int caretLength = rtb.SelectionLength;
+        public static void Colorize(
+            RichTextBox rtb,
+            IEnumerable<Token> tokens,
+            IEnumerable<(int line, int col, string msg, bool isWarning)>? diagnostics)
+        {
+            if (rtb is null)
+                return;
+
+            int oldStart = rtb.SelectionStart;
+            int oldLength = rtb.SelectionLength;
 
             rtb.SuspendLayout();
 
             try
             {
-                // Reset global
                 rtb.SelectAll();
                 rtb.SelectionColor = Color.Black;
                 rtb.SelectionBackColor = Color.White;
@@ -31,50 +48,60 @@ namespace SemanticamenteElocuente
                     if (string.IsNullOrEmpty(t.Lexeme))
                         continue;
 
-                    int idx = IndexFromLineCol(rtb, t.Line, t.Column);
-                    if (idx < 0 || idx >= rtb.TextLength)
+                    int start = IndexFromLineCol(rtb, t.Line, t.Column);
+                    if (start < 0 || start >= rtb.TextLength)
                         continue;
 
-                    int safeLen = Math.Min(t.Lexeme.Length, rtb.TextLength - idx);
-                    if (safeLen <= 0)
+                    int length = Math.Min(t.Lexeme.Length, rtb.TextLength - start);
+                    if (length <= 0)
                         continue;
 
-                    rtb.Select(idx, safeLen);
-                    rtb.SelectionColor = GetColor(t);
+                    rtb.Select(start, length);
+                    rtb.SelectionColor = GetTokenColor(t.Type);
                     rtb.SelectionBackColor = Color.White;
-
-                    var style = GetFontStyle(t);
-                    if (style != FontStyle.Regular)
-                        rtb.SelectionFont = new Font(rtb.Font, style);
-                    else
-                        rtb.SelectionFont = new Font(rtb.Font, FontStyle.Regular);
+                    rtb.SelectionFont = new Font(rtb.Font, GetTokenStyle(t.Type));
                 }
 
-                if (errors is not null)
+                if (diagnostics != null)
                 {
-                    foreach (var e in errors)
+                    foreach (var d in diagnostics)
                     {
-                        int idx = IndexFromLineCol(rtb, e.line, e.col);
-                        if (idx < 0 || idx >= rtb.TextLength)
+                        int start = IndexFromLineCol(rtb, d.line, d.col);
+                        if (start < 0 || start >= rtb.TextLength)
                             continue;
 
-                        rtb.Select(idx, 1);
-                        rtb.SelectionBackColor = Color.MistyRose;
-                        rtb.SelectionColor = Color.DarkRed;
-                        rtb.SelectionFont = new Font(rtb.Font, FontStyle.Bold);
+                        int length = 1;
+                        if (start + length > rtb.TextLength)
+                            length = rtb.TextLength - start;
+
+                        rtb.Select(start, length);
+
+                        if (d.isWarning)
+                        {
+                            rtb.SelectionBackColor = Color.FromArgb(255, 247, 204);
+                            rtb.SelectionColor = Color.DarkOrange;
+                            rtb.SelectionFont = new Font(rtb.Font, FontStyle.Underline | FontStyle.Bold);
+                        }
+                        else
+                        {
+                            rtb.SelectionBackColor = Color.MistyRose;
+                            rtb.SelectionColor = Color.DarkRed;
+                            rtb.SelectionFont = new Font(rtb.Font, FontStyle.Bold);
+                        }
                     }
                 }
             }
             finally
             {
-                int restoreStart = Math.Max(0, Math.Min(caretStart, rtb.TextLength));
-                int restoreLen = Math.Max(0, Math.Min(caretLength, rtb.TextLength - restoreStart));
-                rtb.Select(restoreStart, restoreLen);
+                int safeStart = Math.Max(0, Math.Min(oldStart, rtb.TextLength));
+                int safeLength = Math.Max(0, Math.Min(oldLength, rtb.TextLength - safeStart));
+
+                rtb.Select(safeStart, safeLength);
                 rtb.ResumeLayout();
             }
         }
 
-        private static Color GetColor(Token t) => t.Type switch
+        private static Color GetTokenColor(TokenType tt) => tt switch
         {
             TokenType.Number => Color.DarkBlue,
             TokenType.String => Color.Brown,
@@ -82,20 +109,17 @@ namespace SemanticamenteElocuente
 
             TokenType.Var or TokenType.Let or TokenType.Const or
             TokenType.Print or TokenType.If or TokenType.Else or
-            TokenType.While or TokenType.For or
-            TokenType.Switch or TokenType.Case or TokenType.Default or
-            TokenType.Break or TokenType.Continue or
-            TokenType.Function or TokenType.Return or
+            TokenType.While or TokenType.For or TokenType.Switch or
+            TokenType.Case or TokenType.Default or TokenType.Break or
+            TokenType.Continue or TokenType.Function or TokenType.Return or
             TokenType.True or TokenType.False
                 => Color.MediumVioletRed,
 
-            TokenType.Plus or TokenType.Minus or TokenType.Star or
-            TokenType.Slash or TokenType.Percent or
-            TokenType.EqualEqual or TokenType.BangEqual or
-            TokenType.Less or TokenType.LessEqual or
-            TokenType.Greater or TokenType.GreaterEqual or
-            TokenType.AndAnd or TokenType.OrOr or TokenType.Bang or
-            TokenType.Increment or TokenType.Decrement
+            TokenType.Plus or TokenType.Minus or TokenType.Star or TokenType.Slash or
+            TokenType.Percent or TokenType.EqualEqual or TokenType.BangEqual or
+            TokenType.Less or TokenType.LessEqual or TokenType.Greater or
+            TokenType.GreaterEqual or TokenType.AndAnd or TokenType.OrOr or
+            TokenType.Bang or TokenType.Increment or TokenType.Decrement
                 => Color.Firebrick,
 
             TokenType.Assign or TokenType.PlusAssign or TokenType.MinusAssign or
@@ -109,22 +133,22 @@ namespace SemanticamenteElocuente
                 => Color.SteelBlue,
 
             TokenType.Comment => Color.Gray,
-
             TokenType.Unknown => Color.Red,
-
             _ => Color.Black
         };
 
-        private static FontStyle GetFontStyle(Token t) => t.Type switch
+        private static FontStyle GetTokenStyle(TokenType tt) => tt switch
         {
             TokenType.Comment => FontStyle.Italic,
+
             TokenType.Var or TokenType.Let or TokenType.Const or
             TokenType.Print or TokenType.If or TokenType.Else or
-            TokenType.While or TokenType.For or
-            TokenType.Switch or TokenType.Case or TokenType.Default or
-            TokenType.Break or TokenType.Continue or
-            TokenType.Function or TokenType.Return
+            TokenType.While or TokenType.For or TokenType.Switch or
+            TokenType.Case or TokenType.Default or TokenType.Break or
+            TokenType.Continue or TokenType.Function or TokenType.Return or
+            TokenType.True or TokenType.False
                 => FontStyle.Bold,
+
             _ => FontStyle.Regular
         };
 
@@ -133,15 +157,15 @@ namespace SemanticamenteElocuente
             if (line <= 0 || col <= 0)
                 return -1;
 
-            int lineIdx = line - 1;
-            if (lineIdx >= rtb.Lines.Length)
+            int lineIndex = line - 1;
+            if (lineIndex >= rtb.Lines.Length)
                 return -1;
 
-            int baseIdx = rtb.GetFirstCharIndexFromLine(lineIdx);
-            if (baseIdx < 0)
+            int baseIndex = rtb.GetFirstCharIndexFromLine(lineIndex);
+            if (baseIndex < 0)
                 return -1;
 
-            return baseIdx + (col - 1);
+            return baseIndex + (col - 1);
         }
     }
 }

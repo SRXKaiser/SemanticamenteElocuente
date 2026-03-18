@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
+
 namespace SemanticamenteElocuente
 {
     public sealed class SemanticAnalyzer
@@ -14,6 +14,9 @@ namespace SemanticamenteElocuente
         private int _loopDepth = 0;
         private int _switchDepth = 0;
         private int _functionDepth = 0;
+
+        private SymbolInfo? _currentFunction;
+        private Dictionary<string, int>? _currentFunctionParamMap;
 
         private static readonly string[] ReservedWords =
         {
@@ -45,8 +48,11 @@ namespace SemanticamenteElocuente
             _loopDepth = 0;
             _switchDepth = 0;
             _functionDepth = 0;
+            _currentFunction = null;
+            _currentFunctionParamMap = null;
 
             RegisterBuiltins();
+            PredeclareTopLevelFunctions(program);
 
             foreach (var stmt in program.Statements)
                 VisitStatement(stmt);
@@ -58,11 +64,52 @@ namespace SemanticamenteElocuente
 
         private void RegisterBuiltins()
         {
-            DeclareSymbol(new SymbolInfo("print", SymbolKind.Function, SemanticType.Void, 1, true));
-            DeclareSymbol(new SymbolInfo("sqrt", SymbolKind.Function, SemanticType.Number, 1, true));
-            DeclareSymbol(new SymbolInfo("pow", SymbolKind.Function, SemanticType.Number, 2, true));
-            DeclareSymbol(new SymbolInfo("abs", SymbolKind.Function, SemanticType.Number, 1, true));
-            DeclareSymbol(new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1, true));
+            var print = new SymbolInfo("print", SymbolKind.Function, SemanticType.Void, 1, true);
+            print.ParameterTypes[0] = SemanticType.Unknown;
+            DeclareSymbol(print);
+
+            var sqrt = new SymbolInfo("sqrt", SymbolKind.Function, SemanticType.Number, 1, true);
+            sqrt.ParameterTypes[0] = SemanticType.Number;
+            DeclareSymbol(sqrt);
+
+            var pow = new SymbolInfo("pow", SymbolKind.Function, SemanticType.Number, 2, true);
+            pow.ParameterTypes[0] = SemanticType.Number;
+            pow.ParameterTypes[1] = SemanticType.Number;
+            DeclareSymbol(pow);
+
+            var abs = new SymbolInfo("abs", SymbolKind.Function, SemanticType.Number, 1, true);
+            abs.ParameterTypes[0] = SemanticType.Number;
+            DeclareSymbol(abs);
+
+            var len = new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1, true);
+            len.ParameterTypes[0] = SemanticType.String;
+            DeclareSymbol(len);
+        }
+
+        private void PredeclareTopLevelFunctions(ProgramNode program)
+        {
+            foreach (var stmt in program.Statements)
+            {
+                if (stmt is not FunctionDecl fn)
+                    continue;
+
+                if (_currentScope.LookupLocal(fn.Name) != null)
+                {
+                    Error(fn, $"La función '{fn.Name}' ya está declarada en este ámbito.");
+                    continue;
+                }
+
+                var fnSymbol = new SymbolInfo(
+                    fn.Name,
+                    SymbolKind.Function,
+                    SemanticType.Unknown,
+                    fn.Parameters.Count,
+                    true,
+                    fn.Line,
+                    fn.Column);
+
+                DeclareSymbol(fnSymbol);
+            }
         }
 
         private void PushScope()
@@ -76,6 +123,14 @@ namespace SemanticamenteElocuente
                 _currentScope = _currentScope.Parent;
         }
 
+        private bool DeclareSymbol(SymbolInfo symbol)
+        {
+            bool ok = _currentScope.Declare(symbol);
+            if (ok)
+                _allDeclaredSymbols.Add(symbol);
+            return ok;
+        }
+
         private void Error(Node node, string message)
         {
             _diagnostics.Add(new SemanticError(node.Line, node.Column, message, SemanticSeverity.Error));
@@ -84,14 +139,6 @@ namespace SemanticamenteElocuente
         private void Warning(int line, int column, string message)
         {
             _diagnostics.Add(new SemanticError(line, column, message, SemanticSeverity.Warning));
-        }
-
-        private bool DeclareSymbol(SymbolInfo symbol)
-        {
-            bool ok = _currentScope.Declare(symbol);
-            if (ok)
-                _allDeclaredSymbols.Add(symbol);
-            return ok;
         }
 
         private void EmitUnusedSymbolWarnings()
@@ -248,6 +295,7 @@ namespace SemanticamenteElocuente
             if (symbol.Type == SemanticType.Unknown)
             {
                 symbol.Type = exprType;
+                PropagateParameterType(assign.Name, exprType);
             }
             else if (exprType != SemanticType.Unknown && symbol.Type != exprType)
             {
@@ -300,14 +348,12 @@ namespace SemanticamenteElocuente
             }
 
             _loopDepth++;
-
             VisitStatement(forStmt.Body);
 
             if (forStmt.Increment != null)
                 VisitStatement(forStmt.Increment);
 
             _loopDepth--;
-
             PopScope();
         }
 
@@ -350,23 +396,58 @@ namespace SemanticamenteElocuente
 
         private void VisitFunctionDecl(FunctionDecl fn)
         {
-            var fnSymbol = new SymbolInfo(
-                fn.Name,
-                SymbolKind.Function,
-                SemanticType.Unknown,
-                fn.Parameters.Count,
-                true,
-                fn.Line,
-                fn.Column);
+            SymbolInfo? fnSymbol;
 
-            if (!DeclareSymbol(fnSymbol))
+            if (_currentScope.Parent == null)
             {
-                Error(fn, $"La función '{fn.Name}' ya está declarada en este ámbito.");
-                return;
+                fnSymbol = _currentScope.LookupLocal(fn.Name);
+
+                if (fnSymbol == null)
+                {
+                    fnSymbol = new SymbolInfo(
+                        fn.Name,
+                        SymbolKind.Function,
+                        SemanticType.Unknown,
+                        fn.Parameters.Count,
+                        true,
+                        fn.Line,
+                        fn.Column);
+
+                    if (!DeclareSymbol(fnSymbol))
+                    {
+                        Error(fn, $"La función '{fn.Name}' ya está declarada en este ámbito.");
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (_currentScope.LookupLocal(fn.Name) != null)
+                {
+                    Error(fn, $"La función '{fn.Name}' ya está declarada en este ámbito.");
+                    return;
+                }
+
+                fnSymbol = new SymbolInfo(
+                    fn.Name,
+                    SymbolKind.Function,
+                    SemanticType.Unknown,
+                    fn.Parameters.Count,
+                    true,
+                    fn.Line,
+                    fn.Column);
+
+                DeclareSymbol(fnSymbol);
             }
 
             PushScope();
             _functionDepth++;
+
+            var previousFunction = _currentFunction;
+            var previousParamMap = _currentFunctionParamMap;
+
+            _currentFunction = fnSymbol;
+            _currentFunctionParamMap = new Dictionary<string, int>(StringComparer.Ordinal);
 
             var duplicated = fn.Parameters
                 .GroupBy(p => p)
@@ -377,12 +458,19 @@ namespace SemanticamenteElocuente
             foreach (var dup in duplicated)
                 Error(fn, $"El parámetro '{dup}' está duplicado en la función '{fn.Name}'.");
 
-            foreach (var p in fn.Parameters.Distinct())
+            for (int i = 0; i < fn.Parameters.Count; i++)
             {
+                string paramName = fn.Parameters[i];
+
+                if (_currentFunctionParamMap.ContainsKey(paramName))
+                    continue;
+
+                _currentFunctionParamMap[paramName] = i;
+
                 var paramSymbol = new SymbolInfo(
-                    p,
+                    paramName,
                     SymbolKind.Parameter,
-                    SemanticType.Unknown,
+                    fnSymbol.ParameterTypes[i],
                     0,
                     true,
                     fn.Line,
@@ -393,17 +481,41 @@ namespace SemanticamenteElocuente
 
             VisitStatement(fn.Body);
 
+            if (!fnSymbol.HasAnyReturn && fnSymbol.Type == SemanticType.Unknown)
+                fnSymbol.Type = SemanticType.Void;
+
+            _currentFunction = previousFunction;
+            _currentFunctionParamMap = previousParamMap;
+
             _functionDepth--;
             PopScope();
         }
 
         private void VisitReturn(ReturnStmt ret)
         {
-            if (_functionDepth == 0)
+            if (_functionDepth == 0 || _currentFunction == null)
+            {
                 Error(ret, "return no puede usarse fuera de una función.");
+                if (ret.Expr != null)
+                    GetExprType(ret.Expr);
+                return;
+            }
 
-            if (ret.Expr != null)
-                GetExprType(ret.Expr);
+            _currentFunction.HasAnyReturn = true;
+
+            SemanticType returnType = ret.Expr == null
+                ? SemanticType.Void
+                : GetExprType(ret.Expr);
+
+            if (_currentFunction.Type == SemanticType.Unknown)
+            {
+                _currentFunction.Type = returnType;
+            }
+            else if (returnType != SemanticType.Unknown && _currentFunction.Type != returnType)
+            {
+                Error(ret,
+                    $"La función '{_currentFunction.Name}' retorna {TypeName(returnType)}, pero ya había sido inferida como {TypeName(_currentFunction.Type)}.");
+            }
         }
 
         private SemanticType GetExprType(Expr expr)
@@ -462,6 +574,8 @@ namespace SemanticamenteElocuente
 
         private SemanticType GetUnaryExprType(UnaryExpr unary)
         {
+            ConstrainExprToType(unary.Inner, unary.Op == UnaryOp.Not ? SemanticType.Bool : SemanticType.Number);
+
             var innerType = GetExprType(unary.Inner);
 
             switch (unary.Op)
@@ -484,6 +598,27 @@ namespace SemanticamenteElocuente
 
         private SemanticType GetBinaryExprType(BinaryExpr binary)
         {
+            switch (binary.Op)
+            {
+                case BinaryOp.Sub:
+                case BinaryOp.Mul:
+                case BinaryOp.Div:
+                case BinaryOp.Mod:
+                case BinaryOp.Less:
+                case BinaryOp.LessEqual:
+                case BinaryOp.Greater:
+                case BinaryOp.GreaterEqual:
+                    ConstrainExprToType(binary.Left, SemanticType.Number);
+                    ConstrainExprToType(binary.Right, SemanticType.Number);
+                    break;
+
+                case BinaryOp.And:
+                case BinaryOp.Or:
+                    ConstrainExprToType(binary.Left, SemanticType.Bool);
+                    ConstrainExprToType(binary.Right, SemanticType.Bool);
+                    break;
+            }
+
             var left = GetExprType(binary.Left);
             var right = GetExprType(binary.Right);
 
@@ -590,8 +725,28 @@ namespace SemanticamenteElocuente
                     $"La función '{call.Name}' espera {symbol.Arity} argumento(s), pero recibió {call.Arguments.Count}.");
             }
 
-            foreach (var arg in call.Arguments)
-                GetExprType(arg);
+            int count = Math.Min(symbol.ParameterTypes.Count, call.Arguments.Count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var argType = GetExprType(call.Arguments[i]);
+                var paramType = symbol.ParameterTypes[i];
+
+                if (paramType == SemanticType.Unknown && argType != SemanticType.Unknown)
+                {
+                    symbol.ParameterTypes[i] = argType;
+                }
+                else if (paramType != SemanticType.Unknown &&
+                         argType != SemanticType.Unknown &&
+                         paramType != argType)
+                {
+                    Error(call,
+                        $"El argumento {i + 1} de '{call.Name}' debe ser {TypeName(paramType)}, pero recibió {TypeName(argType)}.");
+                }
+            }
+
+            for (int i = count; i < call.Arguments.Count; i++)
+                GetExprType(call.Arguments[i]);
 
             ValidateBuiltinCall(call);
 
@@ -638,6 +793,51 @@ namespace SemanticamenteElocuente
                     if (t != SemanticType.String && t != SemanticType.Unknown)
                         Error(call, "La función 'len' requiere un argumento de tipo string.");
                 }
+            }
+        }
+
+        private void ConstrainExprToType(Expr expr, SemanticType expectedType)
+        {
+            if (expr is IdentifierExpr id)
+            {
+                var symbol = _currentScope.Lookup(id.Name);
+                if (symbol == null)
+                    return;
+
+                if (symbol.Type == SemanticType.Unknown)
+                {
+                    symbol.Type = expectedType;
+                    PropagateParameterType(id.Name, expectedType);
+                }
+                else if (symbol.Type != expectedType)
+                {
+                    Error(id,
+                        $"El identificador '{id.Name}' debe ser de tipo {TypeName(expectedType)}, pero es {TypeName(symbol.Type)}.");
+                }
+            }
+        }
+
+        private void PropagateParameterType(string name, SemanticType type)
+        {
+            if (_currentFunction == null || _currentFunctionParamMap == null)
+                return;
+
+            if (!_currentFunctionParamMap.TryGetValue(name, out int index))
+                return;
+
+            if (index < 0 || index >= _currentFunction.ParameterTypes.Count)
+                return;
+
+            var current = _currentFunction.ParameterTypes[index];
+
+            if (current == SemanticType.Unknown)
+            {
+                _currentFunction.ParameterTypes[index] = type;
+            }
+            else if (type != SemanticType.Unknown && current != type)
+            {
+                Warning(_currentFunction.DeclLine, _currentFunction.DeclColumn,
+                    $"El parámetro '{name}' de la función '{_currentFunction.Name}' recibe inferencias incompatibles ({TypeName(current)} y {TypeName(type)}).");
             }
         }
 

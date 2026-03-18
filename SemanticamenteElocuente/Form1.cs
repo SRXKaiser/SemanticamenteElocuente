@@ -50,9 +50,7 @@ namespace SemanticamenteElocuente
 
             try
             {
-                // =========================================
-                // 1. ANÁLISIS LÉXICO
-                // =========================================
+                // 1. LÉXICO
                 var lexer = new Lexer(_codigoFuente);
                 var tokens = lexer.ScanAll().ToList();
 
@@ -75,9 +73,7 @@ namespace SemanticamenteElocuente
                     rtbSalida.AppendText($"  {Descripcion(t)}\n");
                 }
 
-                // =========================================
-                // 2. ANÁLISIS SINTÁCTICO
-                // =========================================
+                // 2. SINTÁCTICO
                 rtbSalida.AppendText("\n=== ANÁLISIS SINTÁCTICO ===\n");
 
                 var parser = new Parser(tokens);
@@ -94,7 +90,7 @@ namespace SemanticamenteElocuente
                     rtbSalida.SelectionColor = Color.Black;
 
                     var erroresSintacticos = parser.Errors
-                        .Select(e => (e.Line, e.Column, e.Message))
+                        .Select(e => (e.Line, e.Column, e.Message, false))
                         .ToList();
 
                     Highlighter.Colorize(rtbCodigo, tokens, erroresSintacticos);
@@ -104,9 +100,7 @@ namespace SemanticamenteElocuente
                 rtbSalida.SelectionColor = Color.DarkGreen;
                 rtbSalida.AppendText("Análisis sintáctico correcto.\n");
 
-                // =========================================
-                // 3. ANÁLISIS SEMÁNTICO
-                // =========================================
+                // 3. SEMÁNTICO
                 rtbSalida.AppendText("\n=== ANÁLISIS SEMÁNTICO ===\n");
 
                 var semantic = new SemanticAnalyzer();
@@ -130,7 +124,7 @@ namespace SemanticamenteElocuente
                     if (semanticErrors.Count > 0)
                     {
                         rtbSalida.SelectionColor = Color.DarkRed;
-                        rtbSalida.AppendText("Errores semánticos:\n\n");
+                        rtbSalida.AppendText($"Errores semánticos ({semanticErrors.Count}):\n\n");
 
                         foreach (var err in semanticErrors)
                             rtbSalida.AppendText(err + "\n");
@@ -141,7 +135,7 @@ namespace SemanticamenteElocuente
                     if (semanticWarnings.Count > 0)
                     {
                         rtbSalida.SelectionColor = Color.DarkOrange;
-                        rtbSalida.AppendText("Warnings:\n\n");
+                        rtbSalida.AppendText($"Warnings ({semanticWarnings.Count}):\n\n");
 
                         foreach (var warn in semanticWarnings)
                             rtbSalida.AppendText(warn + "\n");
@@ -152,19 +146,17 @@ namespace SemanticamenteElocuente
                     rtbSalida.SelectionColor = Color.Black;
                 }
 
+                var semanticHighlight = semanticDiagnostics
+                    .Select(d => (d.Line, d.Column, d.Message, d.Severity == SemanticSeverity.Warning))
+                    .ToList();
+
+                if (semanticHighlight.Count > 0)
+                    Highlighter.Colorize(rtbCodigo, tokens, semanticHighlight);
+
                 if (semanticErrors.Count > 0)
-                {
-                    var erroresSemanticos = semanticErrors
-                        .Select(e => (e.Line, e.Column, e.Message))
-                        .ToList();
-
-                    Highlighter.Colorize(rtbCodigo, tokens, erroresSemanticos);
                     return;
-                }
 
-                // =========================================
                 // 4. EJECUCIÓN
-                // =========================================
                 rtbSalida.SelectionColor = Color.Black;
                 rtbSalida.AppendText("=== EJECUCIÓN ===\n");
 
@@ -179,16 +171,13 @@ namespace SemanticamenteElocuente
                 else
                 {
                     rtbSalida.SelectionColor = Color.DarkBlue;
-
                     foreach (var line in output)
                         rtbSalida.AppendText(line + "\n");
                 }
 
                 rtbSalida.SelectionColor = Color.Black;
 
-                // =========================================
                 // 5. EXPORTAR CSV
-                // =========================================
                 if (!string.IsNullOrWhiteSpace(_rutaArchivo) && File.Exists(_rutaArchivo))
                 {
                     var dir = Path.GetDirectoryName(_rutaArchivo)!;
@@ -234,12 +223,11 @@ namespace SemanticamenteElocuente
             }
         }
 
-        // ---- Helpers ----
-        private static System.Drawing.Color ColorFor(TokenType tt) => tt switch
+        private static Color ColorFor(TokenType tt) => tt switch
         {
-            TokenType.Number => System.Drawing.Color.DarkBlue,
-            TokenType.String => System.Drawing.Color.Brown,
-            TokenType.Identifier => System.Drawing.Color.DarkGreen,
+            TokenType.Number => Color.DarkBlue,
+            TokenType.String => Color.Brown,
+            TokenType.Identifier => Color.DarkGreen,
 
             TokenType.Var or TokenType.Let or TokenType.Const or
             TokenType.Print or TokenType.If or TokenType.Else or
@@ -247,27 +235,27 @@ namespace SemanticamenteElocuente
             TokenType.Case or TokenType.Default or TokenType.Break or
             TokenType.Continue or TokenType.Function or TokenType.Return or
             TokenType.True or TokenType.False
-                => System.Drawing.Color.MediumVioletRed,
+                => Color.MediumVioletRed,
 
             TokenType.Plus or TokenType.Minus or TokenType.Star or TokenType.Slash or
             TokenType.Percent or TokenType.EqualEqual or TokenType.BangEqual or
             TokenType.Less or TokenType.LessEqual or TokenType.Greater or
             TokenType.GreaterEqual or TokenType.AndAnd or TokenType.OrOr or
             TokenType.Bang or TokenType.Increment or TokenType.Decrement
-                => System.Drawing.Color.Firebrick,
+                => Color.Firebrick,
 
             TokenType.Assign or TokenType.PlusAssign or TokenType.MinusAssign or
             TokenType.StarAssign or TokenType.SlashAssign
-                => System.Drawing.Color.Sienna,
+                => Color.Sienna,
 
             TokenType.Semicolon or TokenType.Comma or TokenType.Colon or TokenType.Dot
-                => System.Drawing.Color.SlateGray,
+                => Color.SlateGray,
 
             TokenType.LParen or TokenType.RParen or TokenType.LBrace or TokenType.RBrace
-                => System.Drawing.Color.SteelBlue,
+                => Color.SteelBlue,
 
-            TokenType.Comment => System.Drawing.Color.DarkGray,
-            _ => System.Drawing.Color.Black
+            TokenType.Comment => Color.DarkGray,
+            _ => Color.Black
         };
 
         private static string Descripcion(Token t) => t.Type switch
