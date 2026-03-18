@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SemanticamenteElocuente")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b9205e28d0c844d2f078d259cc51e016cfead5f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SemanticamenteElocuente")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SemanticamenteElocuente")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

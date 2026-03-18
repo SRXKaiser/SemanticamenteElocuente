@@ -14,3 +14,4 @@ C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\
 C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.pdb
 C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.genruntimeconfig.cache
 C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\ref\SemanticamenteElocuente.dll
+C:\Users\desga\source\repos\SemanticamenteElocuente\SemanticamenteElocuente\obj\Debug\net10.0-windows\SemanticamenteElocuente.sourcelink.json

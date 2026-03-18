@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace SemanticamenteElocuente
 {
     public sealed class SemanticAnalyzer
     {
         private readonly List<SemanticError> _errors = new();
-
         private SemanticScope _currentScope = new SemanticScope();
 
         private int _loopDepth = 0;
         private int _switchDepth = 0;
         private int _functionDepth = 0;
+
         private static readonly string[] ReservedWords =
         {
             "var",
@@ -33,10 +34,10 @@ namespace SemanticamenteElocuente
             "true",
             "false"
         };
+
         public IReadOnlyList<SemanticError> Analyze(ProgramNode program)
         {
             _errors.Clear();
-
             _currentScope = new SemanticScope();
             _loopDepth = 0;
             _switchDepth = 0;
@@ -49,17 +50,15 @@ namespace SemanticamenteElocuente
 
             return _errors;
         }
-        
 
         private void RegisterBuiltins()
         {
-            _currentScope.Declare(new SymbolInfo("print", SymbolKind.Function, 1));
-            _currentScope.Declare(new SymbolInfo("sqrt", SymbolKind.Function, 1));
-            _currentScope.Declare(new SymbolInfo("pow", SymbolKind.Function, 2));
-            _currentScope.Declare(new SymbolInfo("abs", SymbolKind.Function, 1));
-            _currentScope.Declare(new SymbolInfo("len", SymbolKind.Function, 1));
+            _currentScope.Declare(new SymbolInfo("print", SymbolKind.Function, SemanticType.Void, 1));
+            _currentScope.Declare(new SymbolInfo("sqrt", SymbolKind.Function, SemanticType.Number, 1));
+            _currentScope.Declare(new SymbolInfo("pow", SymbolKind.Function, SemanticType.Number, 2));
+            _currentScope.Declare(new SymbolInfo("abs", SymbolKind.Function, SemanticType.Number, 1));
+            _currentScope.Declare(new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1));
         }
-
 
         private void PushScope()
         {
@@ -85,141 +84,54 @@ namespace SemanticamenteElocuente
                     VisitBlock(block);
                     break;
 
-                case ExprStmt expr:
-                    VisitExpression(expr.Expr);
+                case ExprStmt exprStmt:
+                    GetExprType(exprStmt.Expr);
                     break;
 
-                case VarDecl v:
-                    VisitVarDecl(v);
+                case VarDecl varDecl:
+                    VisitVarDecl(varDecl);
                     break;
 
-                case AssignStmt a:
-                    VisitAssign(a);
+                case AssignStmt assign:
+                    VisitAssign(assign);
                     break;
 
-                case PrintStmt p:
-                    VisitExpression(p.Expr);
+                case PrintStmt print:
+                    GetExprType(print.Expr);
                     break;
 
-                case IfStmt i:
-                    VisitExpression(i.Condition);
-                    VisitStatement(i.ThenBranch);
-                    if (i.ElseBranch != null)
-                        VisitStatement(i.ElseBranch);
+                case IfStmt ifStmt:
+                    VisitIf(ifStmt);
                     break;
 
-                case WhileStmt w:
-
-                    VisitExpression(w.Condition);
-
-                    _loopDepth++;
-
-                    VisitStatement(w.Body);
-
-                    _loopDepth--;
-
+                case WhileStmt whileStmt:
+                    VisitWhile(whileStmt);
                     break;
 
-                case ForStmt f:
-
-                    PushScope();
-
-                    if (f.Init != null)
-                        VisitStatement(f.Init);
-
-                    if (f.Condition != null)
-                        VisitExpression(f.Condition);
-
-                    _loopDepth++;
-
-                    VisitStatement(f.Body);
-
-                    if (f.Increment != null)
-                        VisitStatement(f.Increment);
-
-                    _loopDepth--;
-
-                    PopScope();
-
+                case ForStmt forStmt:
+                    VisitFor(forStmt);
                     break;
 
-                case SwitchStmt s:
-
-                    VisitExpression(s.Expr);
-
-                    _switchDepth++;
-
-                    var seenCases = new HashSet<string>();
-
-                    foreach (var c in s.Cases)
-                    {
-                        VisitExpression(c.Value);
-
-                        string key = c.Value.ToString();
-
-                        if (!seenCases.Add(key))
-                            Error(c.Value, "case duplicado en switch");
-
-                        foreach (var st in c.Statements)
-                            VisitStatement(st);
-                    }
-
-                    if (s.DefaultStatements != null)
-                    {
-                        foreach (var st in s.DefaultStatements)
-                            VisitStatement(st);
-                    }
-
-                    _switchDepth--;
-
+                case SwitchStmt switchStmt:
+                    VisitSwitch(switchStmt);
                     break;
 
                 case FunctionDecl fn:
-
-                    if (!_currentScope.Declare(
-                        new SymbolInfo(fn.Name, SymbolKind.Function, fn.Parameters.Count)))
-                    {
-                        Error(fn, $"La función '{fn.Name}' ya está declarada.");
-                        return;
-                    }
-
-                    PushScope();
-
-                    _functionDepth++;
-
-                    foreach (var p in fn.Parameters)
-                        _currentScope.Declare(new SymbolInfo(p, SymbolKind.Parameter));
-
-                    VisitStatement(fn.Body);
-
-                    _functionDepth--;
-
-                    PopScope();
-
+                    VisitFunctionDecl(fn);
                     break;
 
-                case ReturnStmt r:
-
-                    if (_functionDepth == 0)
-                        Error(r, "return fuera de función");
-
-                    if (r.Expr != null)
-                        VisitExpression(r.Expr);
-
+                case ReturnStmt ret:
+                    VisitReturn(ret);
                     break;
 
-                case BreakStmt b:
-
+                case BreakStmt br:
                     if (_loopDepth == 0 && _switchDepth == 0)
-                        Error(b, "break fuera de ciclo o switch");
-
+                        Error(br, "break solo puede usarse dentro de while, for o switch.");
                     break;
 
-                case ContinueStmt c:
-
+                case ContinueStmt cont:
                     if (_loopDepth == 0)
-                        Error(c, "continue fuera de ciclo");
-
+                        Error(cont, "continue solo puede usarse dentro de while o for.");
                     break;
             }
         }
@@ -234,39 +146,205 @@ namespace SemanticamenteElocuente
             PopScope();
         }
 
-        private void VisitVarDecl(VarDecl v)
+        private void VisitVarDecl(VarDecl varDecl)
         {
-            var kind = v.Kind == "const"
+            var kind = varDecl.Kind == "const"
                 ? SymbolKind.Constant
                 : SymbolKind.Variable;
 
-            if (!_currentScope.Declare(new SymbolInfo(v.Name, kind)))
-                Error(v, $"'{v.Name}' ya está declarado.");
+            SemanticType initType = SemanticType.Unknown;
 
-            if (v.Init != null)
-                VisitExpression(v.Init);
+            if (varDecl.Init != null)
+                initType = GetExprType(varDecl.Init);
+
+            if (!_currentScope.Declare(new SymbolInfo(varDecl.Name, kind, initType)))
+            {
+                Error(varDecl, $"'{varDecl.Name}' ya está declarado en este ámbito.");
+            }
         }
 
-        private void VisitAssign(AssignStmt a)
+        private void VisitAssign(AssignStmt assign)
         {
-            var symbol = _currentScope.Lookup(a.Name);
+            var symbol = _currentScope.Lookup(assign.Name);
 
             if (symbol == null)
-                Error(a, $"Variable '{a.Name}' no declarada.");
+            {
+                var suggestion = FindClosestName(assign.Name);
 
-            else if (!symbol.IsAssignable)
-                Error(a, $"No se puede modificar '{a.Name}'.");
+                if (!string.IsNullOrEmpty(suggestion))
+                    Error(assign, $"La variable '{assign.Name}' no ha sido declarada. ¿Quisiste decir '{suggestion}'?");
+                else
+                    Error(assign, $"La variable '{assign.Name}' no ha sido declarada.");
 
-            VisitExpression(a.Expr);
+                GetExprType(assign.Expr);
+                return;
+            }
+
+            if (!symbol.IsAssignable)
+            {
+                Error(assign, $"No se puede modificar '{assign.Name}'.");
+                GetExprType(assign.Expr);
+                return;
+            }
+
+            var exprType = GetExprType(assign.Expr);
+
+            if (symbol.Type == SemanticType.Unknown)
+            {
+                symbol.Type = exprType;
+            }
+            else if (exprType != SemanticType.Unknown && symbol.Type != exprType)
+            {
+                Error(assign,
+                    $"No se puede asignar un valor de tipo {TypeName(exprType)} a '{assign.Name}' porque es de tipo {TypeName(symbol.Type)}.");
+            }
         }
 
-        private void VisitExpression(Expr expr)
+        private void VisitIf(IfStmt ifStmt)
+        {
+            var conditionType = GetExprType(ifStmt.Condition);
+
+            if (conditionType != SemanticType.Bool && conditionType != SemanticType.Unknown)
+                Error(ifStmt.Condition, "La condición de if debe ser booleana.");
+
+            VisitStatement(ifStmt.ThenBranch);
+
+            if (ifStmt.ElseBranch != null)
+                VisitStatement(ifStmt.ElseBranch);
+        }
+
+        private void VisitWhile(WhileStmt whileStmt)
+        {
+            var conditionType = GetExprType(whileStmt.Condition);
+
+            if (conditionType != SemanticType.Bool && conditionType != SemanticType.Unknown)
+                Error(whileStmt.Condition, "La condición de while debe ser booleana.");
+
+            _loopDepth++;
+            VisitStatement(whileStmt.Body);
+            _loopDepth--;
+        }
+
+        private void VisitFor(ForStmt forStmt)
+        {
+            PushScope();
+
+            if (forStmt.Init != null)
+                VisitStatement(forStmt.Init);
+
+            if (forStmt.Condition != null)
+            {
+                var condType = GetExprType(forStmt.Condition);
+
+                if (condType != SemanticType.Bool && condType != SemanticType.Unknown)
+                    Error(forStmt.Condition, "La condición de for debe ser booleana.");
+            }
+
+            _loopDepth++;
+
+            VisitStatement(forStmt.Body);
+
+            if (forStmt.Increment != null)
+                VisitStatement(forStmt.Increment);
+
+            _loopDepth--;
+
+            PopScope();
+        }
+
+        private void VisitSwitch(SwitchStmt switchStmt)
+        {
+            var switchType = GetExprType(switchStmt.Expr);
+
+            _switchDepth++;
+
+            var seenCases = new HashSet<string>();
+
+            foreach (var c in switchStmt.Cases)
+            {
+                var caseType = GetExprType(c.Value);
+
+                if (switchType != SemanticType.Unknown &&
+                    caseType != SemanticType.Unknown &&
+                    switchType != caseType)
+                {
+                    Error(c.Value,
+                        $"El tipo del case ({TypeName(caseType)}) no coincide con el tipo del switch ({TypeName(switchType)}).");
+                }
+
+                string key = GetCaseKey(c.Value);
+                if (!seenCases.Add(key))
+                    Error(c.Value, "Valor de case duplicado en switch.");
+
+                foreach (var st in c.Statements)
+                    VisitStatement(st);
+            }
+
+            if (switchStmt.DefaultStatements != null)
+            {
+                foreach (var st in switchStmt.DefaultStatements)
+                    VisitStatement(st);
+            }
+
+            _switchDepth--;
+        }
+
+        private void VisitFunctionDecl(FunctionDecl fn)
+        {
+            if (!_currentScope.Declare(new SymbolInfo(fn.Name, SymbolKind.Function, SemanticType.Unknown, fn.Parameters.Count)))
+            {
+                Error(fn, $"La función '{fn.Name}' ya está declarada en este ámbito.");
+                return;
+            }
+
+            PushScope();
+            _functionDepth++;
+
+            var duplicated = fn.Parameters
+                .GroupBy(p => p)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            foreach (var dup in duplicated)
+                Error(fn, $"El parámetro '{dup}' está duplicado en la función '{fn.Name}'.");
+
+            foreach (var p in fn.Parameters.Distinct())
+                _currentScope.Declare(new SymbolInfo(p, SymbolKind.Parameter, SemanticType.Unknown));
+
+            VisitStatement(fn.Body);
+
+            _functionDepth--;
+            PopScope();
+        }
+
+        private void VisitReturn(ReturnStmt ret)
+        {
+            if (_functionDepth == 0)
+                Error(ret, "return no puede usarse fuera de una función.");
+
+            if (ret.Expr != null)
+                GetExprType(ret.Expr);
+        }
+
+        private SemanticType GetExprType(Expr expr)
         {
             switch (expr)
             {
+                case NumberExpr:
+                    return SemanticType.Number;
+
+                case StringExpr:
+                    return SemanticType.String;
+
+                case BoolExpr:
+                    return SemanticType.Bool;
+
                 case IdentifierExpr id:
                     {
-                        if (_currentScope.Lookup(id.Name) == null)
+                        var symbol = _currentScope.Lookup(id.Name);
+
+                        if (symbol == null)
                         {
                             var suggestion = FindClosestName(id.Name);
 
@@ -274,33 +352,123 @@ namespace SemanticamenteElocuente
                                 Error(id, $"Identificador '{id.Name}' no existe. ¿Quisiste decir '{suggestion}'?");
                             else
                                 Error(id, $"Identificador '{id.Name}' no existe.");
+
+                            return SemanticType.Unknown;
                         }
 
-                        break;
+                        return symbol.Type;
                     }
 
-                case BinaryExpr b:
+                case UnaryExpr unary:
+                    return GetUnaryExprType(unary);
 
-                    VisitExpression(b.Left);
-                    VisitExpression(b.Right);
-
-                    break;
-
-                case UnaryExpr u:
-
-                    VisitExpression(u.Inner);
-
-                    break;
+                case BinaryExpr binary:
+                    return GetBinaryExprType(binary);
 
                 case CallExpr call:
+                    return GetCallType(call);
 
-                    VisitCall(call);
-
-                    break;
+                default:
+                    return SemanticType.Unknown;
             }
         }
 
-        private void VisitCall(CallExpr call)
+        private SemanticType GetUnaryExprType(UnaryExpr unary)
+        {
+            var innerType = GetExprType(unary.Inner);
+
+            switch (unary.Op)
+            {
+                case UnaryOp.Plus:
+                case UnaryOp.Minus:
+                    if (innerType != SemanticType.Number && innerType != SemanticType.Unknown)
+                        Error(unary, $"El operador unario '{UnaryOpText(unary.Op)}' solo admite operandos numéricos.");
+                    return SemanticType.Number;
+
+                case UnaryOp.Not:
+                    if (innerType != SemanticType.Bool && innerType != SemanticType.Unknown)
+                        Error(unary, "El operador '!' solo admite operandos booleanos.");
+                    return SemanticType.Bool;
+
+                default:
+                    return SemanticType.Unknown;
+            }
+        }
+
+        private SemanticType GetBinaryExprType(BinaryExpr binary)
+        {
+            var left = GetExprType(binary.Left);
+            var right = GetExprType(binary.Right);
+
+            switch (binary.Op)
+            {
+                case BinaryOp.Add:
+                    if (left == SemanticType.Number && right == SemanticType.Number)
+                        return SemanticType.Number;
+
+                    if (left == SemanticType.String && right == SemanticType.String)
+                        return SemanticType.String;
+
+                    if (left != SemanticType.Unknown && right != SemanticType.Unknown)
+                        Error(binary,
+                            $"La suma '+' solo admite number+number o string+string, no {TypeName(left)}+{TypeName(right)}.");
+
+                    return SemanticType.Unknown;
+
+                case BinaryOp.Sub:
+                case BinaryOp.Mul:
+                case BinaryOp.Div:
+                case BinaryOp.Mod:
+                    if (left == SemanticType.Number && right == SemanticType.Number)
+                        return SemanticType.Number;
+
+                    if (left != SemanticType.Unknown && right != SemanticType.Unknown)
+                        Error(binary,
+                            $"El operador '{BinaryOpText(binary.Op)}' solo admite operandos numéricos, no {TypeName(left)} y {TypeName(right)}.");
+
+                    return SemanticType.Unknown;
+
+                case BinaryOp.Less:
+                case BinaryOp.LessEqual:
+                case BinaryOp.Greater:
+                case BinaryOp.GreaterEqual:
+                    if (left == SemanticType.Number && right == SemanticType.Number)
+                        return SemanticType.Bool;
+
+                    if (left != SemanticType.Unknown && right != SemanticType.Unknown)
+                        Error(binary,
+                            $"La comparación '{BinaryOpText(binary.Op)}' solo admite operandos numéricos, no {TypeName(left)} y {TypeName(right)}.");
+
+                    return SemanticType.Bool;
+
+                case BinaryOp.Equal:
+                case BinaryOp.NotEqual:
+                    if (left == SemanticType.Unknown || right == SemanticType.Unknown)
+                        return SemanticType.Bool;
+
+                    if (left != right)
+                        Error(binary,
+                            $"No se pueden comparar valores de tipos distintos: {TypeName(left)} y {TypeName(right)}.");
+
+                    return SemanticType.Bool;
+
+                case BinaryOp.And:
+                case BinaryOp.Or:
+                    if (left == SemanticType.Bool && right == SemanticType.Bool)
+                        return SemanticType.Bool;
+
+                    if (left != SemanticType.Unknown && right != SemanticType.Unknown)
+                        Error(binary,
+                            $"El operador lógico '{BinaryOpText(binary.Op)}' solo admite booleanos, no {TypeName(left)} y {TypeName(right)}.");
+
+                    return SemanticType.Bool;
+
+                default:
+                    return SemanticType.Unknown;
+            }
+        }
+
+        private SemanticType GetCallType(CallExpr call)
         {
             var symbol = _currentScope.Lookup(call.Name);
 
@@ -312,20 +480,94 @@ namespace SemanticamenteElocuente
                     Error(call, $"Función '{call.Name}' no declarada. ¿Quisiste decir '{suggestion}'?");
                 else
                     Error(call, $"Función '{call.Name}' no declarada.");
-            }
-            else if (symbol.Kind != SymbolKind.Function)
-                Error(call, $"'{call.Name}' no es función.");
 
-            else if (symbol.Arity != call.Arguments.Count)
-                Error(call, $"'{call.Name}' espera {symbol.Arity} argumentos.");
+                foreach (var arg in call.Arguments)
+                    GetExprType(arg);
+
+                return SemanticType.Unknown;
+            }
+
+            if (symbol.Kind != SymbolKind.Function)
+            {
+                Error(call, $"'{call.Name}' no es una función.");
+
+                foreach (var arg in call.Arguments)
+                    GetExprType(arg);
+
+                return SemanticType.Unknown;
+            }
+
+            if (symbol.Arity != call.Arguments.Count)
+            {
+                Error(call,
+                    $"La función '{call.Name}' espera {symbol.Arity} argumento(s), pero recibió {call.Arguments.Count}.");
+            }
 
             foreach (var arg in call.Arguments)
-                VisitExpression(arg);
+                GetExprType(arg);
+
+            ValidateBuiltinCall(call);
+
+            return symbol.Type;
         }
+
+        private void ValidateBuiltinCall(CallExpr call)
+        {
+            if (call.Name == "print")
+                return;
+
+            if (call.Name == "sqrt" || call.Name == "abs")
+            {
+                if (call.Arguments.Count == 1)
+                {
+                    var t = GetExprType(call.Arguments[0]);
+                    if (t != SemanticType.Number && t != SemanticType.Unknown)
+                        Error(call, $"La función '{call.Name}' requiere un argumento numérico.");
+                }
+                return;
+            }
+
+            if (call.Name == "pow")
+            {
+                if (call.Arguments.Count == 2)
+                {
+                    var t1 = GetExprType(call.Arguments[0]);
+                    var t2 = GetExprType(call.Arguments[1]);
+
+                    if (t1 != SemanticType.Number && t1 != SemanticType.Unknown)
+                        Error(call, "El primer argumento de 'pow' debe ser numérico.");
+
+                    if (t2 != SemanticType.Number && t2 != SemanticType.Unknown)
+                        Error(call, "El segundo argumento de 'pow' debe ser numérico.");
+                }
+                return;
+            }
+
+            if (call.Name == "len")
+            {
+                if (call.Arguments.Count == 1)
+                {
+                    var t = GetExprType(call.Arguments[0]);
+                    if (t != SemanticType.String && t != SemanticType.Unknown)
+                        Error(call, "La función 'len' requiere un argumento de tipo string.");
+                }
+            }
+        }
+
+        private string GetCaseKey(Expr expr)
+        {
+            return expr switch
+            {
+                NumberExpr n => $"num:{n.Value}",
+                StringExpr s => $"str:{s.Value}",
+                BoolExpr b => $"bool:{b.Value}",
+                _ => $"expr:{expr.GetType().Name}:{expr.Line}:{expr.Column}"
+            };
+        }
+
         private string? FindClosestName(string name)
         {
             var candidates = new HashSet<string>(ReservedWords);
-
             CollectScopeSymbols(_currentScope, candidates);
 
             string? best = null;
@@ -342,7 +584,6 @@ namespace SemanticamenteElocuente
                 }
             }
 
-            // Umbral pequeño para evitar sugerencias absurdas
             return bestDistance <= 2 ? best : null;
         }
 
@@ -384,6 +625,50 @@ namespace SemanticamenteElocuente
             }
 
             return dp[a.Length, b.Length];
+        }
+
+        private static string TypeName(SemanticType type)
+        {
+            return type switch
+            {
+                SemanticType.Number => "number",
+                SemanticType.String => "string",
+                SemanticType.Bool => "bool",
+                SemanticType.Void => "void",
+                _ => "unknown"
+            };
+        }
+
+        private static string BinaryOpText(BinaryOp op)
+        {
+            return op switch
+            {
+                BinaryOp.Add => "+",
+                BinaryOp.Sub => "-",
+                BinaryOp.Mul => "*",
+                BinaryOp.Div => "/",
+                BinaryOp.Mod => "%",
+                BinaryOp.Equal => "==",
+                BinaryOp.NotEqual => "!=",
+                BinaryOp.Less => "<",
+                BinaryOp.LessEqual => "<=",
+                BinaryOp.Greater => ">",
+                BinaryOp.GreaterEqual => ">=",
+                BinaryOp.And => "&&",
+                BinaryOp.Or => "||",
+                _ => "?"
+            };
+        }
+
+        private static string UnaryOpText(UnaryOp op)
+        {
+            return op switch
+            {
+                UnaryOp.Plus => "+",
+                UnaryOp.Minus => "-",
+                UnaryOp.Not => "!",
+                _ => "?"
+            };
         }
     }
 }
