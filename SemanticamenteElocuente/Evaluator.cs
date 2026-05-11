@@ -438,7 +438,8 @@ namespace SemanticamenteElocuente
 
                 return (double)resultado;
             }
-
+            if (TryEvalAsmCall(c, env, out var asmResult))
+                return asmResult;
             var fn = env.GetFunction(c.Name, c.Line, c.Column);
 
             if (fn.Parameters.Count != c.Arguments.Count)
@@ -530,6 +531,71 @@ namespace SemanticamenteElocuente
                 throw new EvalError("asmSuma solo acepta enteros de 32 bits.", line, col);
 
             return (int)number;
+        }
+        private bool TryEvalAsmCall(CallExpr c, RuntimeEnvironment env, out object? result)
+        {
+            result = null;
+
+            switch (c.Name)
+            {
+                case "asmSuma":
+                    {
+                        EnsureArgCount(c, 2);
+
+                        int a = ToInt32ForAsm(Evaluate(c.Arguments[0], env), c.Line, c.Column);
+                        int b = ToInt32ForAsm(Evaluate(c.Arguments[1], env), c.Line, c.Column);
+
+                        result = (double)NativeAsm.SumaAsm(a, b);
+                        return true;
+                    }
+
+                case "asmMax":
+                    {
+                        EnsureArgCount(c, 2);
+
+                        int a = ToInt32ForAsm(Evaluate(c.Arguments[0], env), c.Line, c.Column);
+                        int b = ToInt32ForAsm(Evaluate(c.Arguments[1], env), c.Line, c.Column);
+
+                        result = (double)NativeAsm.MaxAsm(a, b);
+                        return true;
+                    }
+
+                case "asmFactorial":
+                    {
+                        EnsureArgCount(c, 1);
+
+                        int n = ToInt32ForAsm(Evaluate(c.Arguments[0], env), c.Line, c.Column);
+                        int value = NativeAsm.FactorialAsm(n);
+
+                        if (value == -1)
+                            throw new EvalError("asmFactorial solo acepta valores entre 0 y 12.", c.Line, c.Column);
+
+                        result = (double)value;
+                        return true;
+                    }
+
+                case "asmEsPar":
+                    {
+                        EnsureArgCount(c, 1);
+
+                        int n = ToInt32ForAsm(Evaluate(c.Arguments[0], env), c.Line, c.Column);
+
+                        result = NativeAsm.EsParAsm(n) == 1;
+                        return true;
+                    }
+
+                default:
+                    return false;
+            }
+        }
+
+        private static void EnsureArgCount(CallExpr c, int expected)
+        {
+            if (c.Arguments.Count != expected)
+                throw new EvalError(
+                    $"{c.Name} requiere exactamente {expected} argumento(s).",
+                    c.Line,
+                    c.Column);
         }
 
         private static bool IsTruthy(object? value)

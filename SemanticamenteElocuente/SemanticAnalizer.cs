@@ -84,6 +84,7 @@ namespace SemanticamenteElocuente
             var len = new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1, true);
             len.ParameterTypes[0] = SemanticType.String;
             DeclareSymbol(len);
+            RegisterAsmBuiltins();
 
             // Función híbrida C# + Ensamblador
             var asmSuma = new SymbolInfo("asmSuma", SymbolKind.Function, SemanticType.Number, 2, true);
@@ -634,12 +635,16 @@ namespace SemanticamenteElocuente
                     if (left == SemanticType.Number && right == SemanticType.Number)
                         return SemanticType.Number;
 
-                    if (left == SemanticType.String && right == SemanticType.String)
+                    // Concatenación textual:
+                    // string + number
+                    // string + bool
+                    // string + string
+                    if (left == SemanticType.String || right == SemanticType.String)
                         return SemanticType.String;
 
                     if (left != SemanticType.Unknown && right != SemanticType.Unknown)
                         Error(binary,
-                            $"La suma '+' solo admite number+number o string+string, no {TypeName(left)}+{TypeName(right)}.");
+                            $"El operador '+' solo admite suma numérica o concatenación con string, no {TypeName(left)}+{TypeName(right)}.");
 
                     return SemanticType.Unknown;
 
@@ -889,6 +894,28 @@ namespace SemanticamenteElocuente
 
                 scope = scope.Parent;
             }
+        }
+        private void RegisterAsmBuiltins()
+        {
+            DeclareBuiltinNumberFunction("asmSuma", SemanticType.Number, SemanticType.Number);
+            DeclareBuiltinNumberFunction("asmMax", SemanticType.Number, SemanticType.Number);
+            DeclareBuiltinNumberFunction("asmFactorial", SemanticType.Number);
+            DeclareBuiltinNumberFunction("asmEsPar", SemanticType.Number);
+        }
+
+        private void DeclareBuiltinNumberFunction(string name, params SemanticType[] parameterTypes)
+        {
+            var symbol = new SymbolInfo(
+                name,
+                SymbolKind.Function,
+                SemanticType.Number,
+                parameterTypes.Length,
+                true);
+
+            for (int i = 0; i < parameterTypes.Length; i++)
+                symbol.ParameterTypes[i] = parameterTypes[i];
+
+            DeclareSymbol(symbol);
         }
 
         private static int LevenshteinDistance(string a, string b)
