@@ -3,8 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\nativeasm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\nativeasm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\evaluator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\evaluator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\semanticanalizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\semanticanalizer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\highlighter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\highlighter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\semanticscope.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\semanticscope.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\symbolinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -15,20 +35,8 @@
       "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\semantictype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\highlighter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\highlighter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\semanticamenteelocuente\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\semanticscope.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|solutionrelative:semanticamenteelocuente\\semanticscope.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A3AA8EC5-5AAA-6A97-2977-38C50367FA44}|SemanticamenteElocuente\\SemanticamenteElocuente.csproj|c:\\users\\desga\\source\\repos\\semanticamenteelocuente\\semanticamenteelocuente\\semanticerror.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -46,60 +54,88 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
+              "Title": "Evaluator.cs",
+              "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Evaluator.cs",
+              "RelativeDocumentMoniker": "SemanticamenteElocuente\\Evaluator.cs",
+              "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Evaluator.cs",
+              "RelativeToolTip": "SemanticamenteElocuente\\Evaluator.cs",
+              "ViewState": "AgIAAKUBAAAAAAAAAAAIwLQBAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-11T02:36:24Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "NativeAsm.cs",
+              "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\NativeAsm.cs",
+              "RelativeDocumentMoniker": "SemanticamenteElocuente\\NativeAsm.cs",
+              "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\NativeAsm.cs",
+              "RelativeToolTip": "SemanticamenteElocuente\\NativeAsm.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-11T02:35:09.759Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Highlighter.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Highlighter.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\Highlighter.cs",
               "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Highlighter.cs",
               "RelativeToolTip": "SemanticamenteElocuente\\Highlighter.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-18T06:37:03.187Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Form1.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\Form1.cs",
               "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Form1.cs",
               "RelativeToolTip": "SemanticamenteElocuente\\Form1.cs",
-              "ViewState": "AgIAAH8AAAAAAAAAAAAhwIQAAAAVAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-18T06:13:01.689Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Form1.cs [Dise\u00F1o]",
+              "DocumentIndex": 8,
+              "Title": "Form1.cs [Design]",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Form1.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\Form1.cs",
-              "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Form1.cs [Dise\u00F1o]",
-              "RelativeToolTip": "SemanticamenteElocuente\\Form1.cs [Dise\u00F1o]",
+              "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\Form1.cs [Design]",
+              "RelativeToolTip": "SemanticamenteElocuente\\Form1.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-18T06:12:40.653Z"
+              "WhenOpened": "2026-03-18T06:12:40.653Z",
+              "EditorCaption": " [Design]"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
               "Title": "SemanticScope.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticScope.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\SemanticScope.cs",
               "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticScope.cs",
               "RelativeToolTip": "SemanticamenteElocuente\\SemanticScope.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAQwB4AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-18T06:05:31.961Z"
+              "WhenOpened": "2026-03-18T06:05:31.961Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "SemanticError.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticError.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\SemanticError.cs",
@@ -107,37 +143,38 @@
               "RelativeToolTip": "SemanticamenteElocuente\\SemanticError.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-18T06:01:37.707Z"
+              "WhenOpened": "2026-03-18T06:01:37.707Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "SemanticAnalizer.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticAnalizer.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\SemanticAnalizer.cs",
               "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticAnalizer.cs",
               "RelativeToolTip": "SemanticamenteElocuente\\SemanticAnalizer.cs",
-              "ViewState": "AgIAAEAAAAAAAAAAAAAawEcAAAArAAAAAAAAAA==",
+              "ViewState": "AgIAAFQAAAAAAAAAAAAwwFsAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-18T05:19:39.827Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 6,
               "Title": "SymbolInfo.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SymbolInfo.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\SymbolInfo.cs",
               "ToolTip": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SymbolInfo.cs",
               "RelativeToolTip": "SemanticamenteElocuente\\SymbolInfo.cs",
-              "ViewState": "AgIAAC4AAAAAAAAAAAAAAAkAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAACsAAAAAAAAAAIBJwAkAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-18T05:19:13.457Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 7,
               "Title": "SemanticType.cs",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticType.cs",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\SemanticType.cs",
@@ -150,7 +187,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 10,
               "Title": "SemanticamenteElocuente.csproj",
               "DocumentMoniker": "C:\\Users\\desga\\source\\repos\\SemanticamenteElocuente\\SemanticamenteElocuente\\SemanticamenteElocuente.csproj",
               "RelativeDocumentMoniker": "SemanticamenteElocuente\\SemanticamenteElocuente.csproj",
@@ -158,7 +195,8 @@
               "RelativeToolTip": "SemanticamenteElocuente\\SemanticamenteElocuente.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-03-18T04:35:14.161Z"
+              "WhenOpened": "2026-03-18T04:35:14.161Z",
+              "EditorCaption": ""
             }
           ]
         }

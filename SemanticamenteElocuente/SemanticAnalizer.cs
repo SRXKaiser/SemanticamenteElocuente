@@ -84,6 +84,12 @@ namespace SemanticamenteElocuente
             var len = new SymbolInfo("len", SymbolKind.Function, SemanticType.Number, 1, true);
             len.ParameterTypes[0] = SemanticType.String;
             DeclareSymbol(len);
+
+            // Función híbrida C# + Ensamblador
+            var asmSuma = new SymbolInfo("asmSuma", SymbolKind.Function, SemanticType.Number, 2, true);
+            asmSuma.ParameterTypes[0] = SemanticType.Number;
+            asmSuma.ParameterTypes[1] = SemanticType.Number;
+            DeclareSymbol(asmSuma);
         }
 
         private void PredeclareTopLevelFunctions(ProgramNode program)

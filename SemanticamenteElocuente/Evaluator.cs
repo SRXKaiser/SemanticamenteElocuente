@@ -426,6 +426,19 @@ namespace SemanticamenteElocuente
                 return FormatValue(value).Length;
             }
 
+            if (string.Equals(c.Name, "asmSuma", StringComparison.Ordinal))
+            {
+                if (c.Arguments.Count != 2)
+                    throw new EvalError("asmSuma requiere exactamente 2 argumentos.", c.Line, c.Column);
+
+                int a = ToInt32ForAsm(Evaluate(c.Arguments[0], env), c.Line, c.Column);
+                int b = ToInt32ForAsm(Evaluate(c.Arguments[1], env), c.Line, c.Column);
+
+                int resultado = NativeAsm.SumaAsm(a, b);
+
+                return (double)resultado;
+            }
+
             var fn = env.GetFunction(c.Name, c.Line, c.Column);
 
             if (fn.Parameters.Count != c.Arguments.Count)
@@ -505,6 +518,18 @@ namespace SemanticamenteElocuente
                 string s when double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var n) => n,
                 _ => throw new EvalError($"No se puede convertir a número: '{FormatValue(value)}'.", line, col)
             };
+        }
+        private static int ToInt32ForAsm(object? value, int line, int col)
+        {
+            double number = ToNumber(value, line, col);
+
+            if (number % 1 != 0)
+                throw new EvalError("asmSuma solo acepta números enteros.", line, col);
+
+            if (number < int.MinValue || number > int.MaxValue)
+                throw new EvalError("asmSuma solo acepta enteros de 32 bits.", line, col);
+
+            return (int)number;
         }
 
         private static bool IsTruthy(object? value)
